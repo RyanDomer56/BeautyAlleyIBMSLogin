@@ -24,7 +24,6 @@ import { AuthProvider, homeFor, useAuth } from "@/auth/AuthProvider";
 import { RequireArea, RequireAuth } from "@/auth/guards";
 import { AppShell } from "@/components/app/AppShell";
 
-import Landing from "@/pages/Landing";
 import Services from "@/pages/Services";
 import Book from "@/pages/Book";
 import Pass from "@/pages/Pass";
@@ -66,7 +65,8 @@ export default function App() {
     <AuthProvider>
       <Routes>
         {/* ------------------------------------------------- public */}
-        <Route path="/" element={<Landing />} />
+        {/* The console's own origin opens the console, not the marketing site. */}
+        <Route path="/" element={<Navigate to="/app" replace />} />
         <Route path="/services" element={<Services />} />
         <Route path="/book" element={<Book />} />
         <Route path="/pass/:id" element={<Pass />} />
