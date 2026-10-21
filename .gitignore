@@ -1,0 +1,63 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+*.tsbuildinfo
+
+# Credentials. Never committed, at ANY level.
+#
+# backend/.gitignore covered backend/.env.local, but the repo ROOT had no rule -
+# which is how a root .env.local carrying SUPABASE_SERVICE_ROLE_KEY,
+# DATABASE_URL and QR_SIGNING_SECRET reached the update_ui branch. The rule is
+# stated here, for the whole tree, so a new .env cannot slip in at another level.
+#
+# .env.example files are templates and stay tracked: they document the shape of
+# every key without carrying a value.
+.env
+.env.*
+!.env.example
+!*/.env.example
+
+# Local JSON backups written by backend/scripts/reset-demo-data.js
+backups/
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Scratch / verification output
+.verify/
+.tools-venv/
+.impeccable.md
+
+# Stray nested clone of this repo (it carries its own .git). Without this rule
+# `git add .` records it as a submodule gitlink, which breaks clones for
+# everyone and points at a commit that only exists locally.
+BeautyAlleyIBMS/
+
+# Editor and agent-internal state
+.workbuddy-ai/
+.vscode/
+.idea/
+*.swp
+
+# WorkBuddy desktop app artifacts
+*.genie
+.wbapp_*
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# cloudflared binary downloaded by backend/scripts/tunnel.js (~70MB, per-OS)
+backend/bin/

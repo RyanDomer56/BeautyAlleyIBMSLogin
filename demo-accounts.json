@@ -1,0 +1,32 @@
+{
+  "note": "Single source for the demo logins. Read by src/auth/demo.ts (the login page's quick-fill buttons) and backend/scripts/demo-accounts.js (which creates them). Do not duplicate these values anywhere else.",
+  "password": "AlleyDemo2026!",
+  "accounts": [
+    {
+      "role": "ADMIN",
+      "email": "admin@beautyalley.ph",
+      "fullName": "Vivienne Laurent",
+      "blurb": "Owner — the full record of bookings, clients, promos and employees"
+    },
+    {
+      "role": "CONCIERGE",
+      "email": "concierge@beautyalley.ph",
+      "fullName": "Mara Villanueva",
+      "blurb": "Concierge — reception, bookings, payments and loyalty, but no admin settings"
+    },
+    {
+      "role": "EMPLOYEE",
+      "email": "stylist@beautyalley.ph",
+      "fullName": "Ana Reyes",
+      "employeeId": "22222222-0000-0000-0000-000000000001",
+      "blurb": "Senior therapist — the run sheet and the door"
+    },
+    {
+      "role": "CLIENT",
+      "email": "client@beautyalley.ph",
+      "fullName": "Ada Cruz",
+      "clientId": "33333333-0000-0000-0000-000000000001",
+      "blurb": "Client — their own appointments and arrival passes"
+    }
+  ]
+}

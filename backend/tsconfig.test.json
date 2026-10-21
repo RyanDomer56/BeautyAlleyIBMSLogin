@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "types": ["node", "jest"],
+    // ts-jest wants this here rather than in its own options: the option moved
+    // into tsconfig in TypeScript 5 and the transform-level copy is deprecated.
+    "isolatedModules": true
+  }
+}

@@ -1,0 +1,374 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ------------------------------------------------------------------ *
+ * The Beauty Alley — design tokens
+ * Palette: deep emerald + warm ivory + champagne. Light-first.
+ * ------------------------------------------------------------------ */
+
+@layer base {
+  :root {
+    /*
+     * Type families live in variables, not literals.
+     *
+     * `tailwind.config.ts` points `font-sans`/`font-display` at these, so the
+     * whole app re-fonts from one place — and, more usefully, a scope can
+     * re-font itself by overriding the variable alone. `.console` below does
+     * exactly that: every `font-display` inside the dashboards becomes the UI
+     * sans without a single component being touched, while the public site
+     * keeps the serif.
+     */
+    --font-sans: "Plus Jakarta Sans";
+    --font-display: "Cormorant Garamond";
+
+    /* Shadows are tinted, and the tint follows the palette. */
+    --shadow-color: 14 43 35; /* deep emerald */
+
+    --background: 40 41% 97%; /* warm ivory */
+    --foreground: 158 32% 10%; /* deep green-black */
+
+    --card: 0 0% 100%;
+    --card-foreground: 158 32% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 158 32% 10%;
+
+    --primary: 160 48% 20%; /* #1B4D3E */
+    --primary-foreground: 44 38% 95%;
+
+    --secondary: 42 34% 91%;
+    --secondary-foreground: 160 40% 16%;
+
+    --muted: 42 30% 93%;
+    --muted-foreground: 152 11% 40%;
+
+    --accent: 36 42% 63%; /* champagne */
+    --accent-foreground: 33 44% 14%;
+
+    --destructive: 12 58% 44%;
+    --destructive-foreground: 44 38% 96%;
+
+    --success: 160 48% 28%;
+    --success-foreground: 44 38% 96%;
+
+    --border: 41 27% 87%;
+    --input: 41 27% 85%;
+    --ring: 160 48% 26%;
+
+    --sidebar: 162 55% 15%;
+    --sidebar-foreground: 44 38% 95%;
+    --sidebar-ring: 152 40% 62%;
+
+    --radius: 0.85rem;
+  }
+
+  .dark {
+    --background: 162 28% 6%;
+    --foreground: 42 30% 94%;
+
+    --card: 162 24% 9%;
+    --card-foreground: 42 30% 94%;
+
+    --popover: 162 24% 9%;
+    --popover-foreground: 42 30% 94%;
+
+    --primary: 152 40% 62%;
+    --primary-foreground: 162 40% 8%;
+
+    --secondary: 162 18% 15%;
+    --secondary-foreground: 42 30% 92%;
+
+    --muted: 162 16% 14%;
+    --muted-foreground: 150 12% 62%;
+
+    --accent: 36 42% 62%;
+    --accent-foreground: 33 44% 10%;
+
+    --destructive: 8 62% 55%;
+    --destructive-foreground: 42 30% 96%;
+
+    --border: 162 14% 19%;
+    --input: 162 14% 22%;
+    --ring: 152 40% 55%;
+
+    --sidebar: 162 30% 8%;
+    --sidebar-foreground: 42 30% 94%;
+    --sidebar-ring: 152 40% 55%;
+  }
+
+  /* ---------------------------------------------------------------- *
+   * The console palette — blush, champagne, ivory, beige, neutral.
+   *
+   * Applied by adding `.console` to `document.body` while a dashboard route
+   * is mounted (see `AppShell`). Everything below is a *variable* override,
+   * so not one dashboard component has to know this palette exists: the same
+   * `bg-card`, `text-muted-foreground`, `border-border`, `font-display` and
+   * `shadow-soft` utilities simply resolve to the console's values.
+   *
+   * Body rather than a wrapper element on purpose — Radix portals the mobile
+   * sidebar sheet into `document.body`, and a wrapper-scoped class would leave
+   * that sheet wearing the emerald palette.
+   *
+   * The public site is untouched and keeps its emerald + serif identity.
+   * ---------------------------------------------------------------- */
+  .console {
+    /* The dashboards are UI, not editorial: the serif steps aside. */
+    --font-display: "Plus Jakarta Sans";
+    /* Warm shadow tint, so a card's lift reads as sunlight not bottle-green. */
+    --shadow-color: 43 24 20;
+
+    --background: 24 44% 98%; /* ivory white, a breath of blush */
+    --foreground: 20 15% 15%; /* warm near-black */
+
+    --card: 0 0% 100%;
+    --card-foreground: 20 15% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 20 15% 15%;
+
+    --primary: 343 33% 34%; /* deep rosewood — the action colour */
+    --primary-foreground: 24 50% 98%;
+
+    --secondary: 32 40% 93%; /* warm beige */
+    --secondary-foreground: 343 28% 26%;
+
+    --muted: 30 32% 94%;
+    --muted-foreground: 22 11% 43%;
+
+    --accent: 38 46% 60%; /* champagne gold */
+    --accent-foreground: 28 45% 14%;
+
+    --destructive: 358 55% 47%;
+    --destructive-foreground: 24 50% 98%;
+
+    --success: 152 36% 31%;
+    --success-foreground: 30 42% 96%;
+
+    --border: 28 26% 88%;
+    --input: 28 26% 86%;
+    --ring: 343 33% 42%;
+
+    /* The rail keeps the public site's emerald: it is the one surface that is
+     * furniture rather than content, and a second dark colour beside the ivory
+     * body read as a different product bolted onto the salon's own site. */
+    --sidebar: 162 55% 15%;
+    --sidebar-foreground: 44 38% 95%;
+    --sidebar-ring: 152 40% 62%;
+
+    --radius: 0.85rem;
+  }
+
+  .console.dark {
+    --background: 340 14% 8%;
+    --foreground: 30 30% 94%;
+
+    --card: 340 12% 11%;
+    --card-foreground: 30 30% 94%;
+
+    --popover: 340 12% 11%;
+    --popover-foreground: 30 30% 94%;
+
+    --primary: 343 40% 62%;
+    --primary-foreground: 340 20% 10%;
+
+    --secondary: 340 12% 17%;
+    --secondary-foreground: 30 30% 92%;
+
+    --muted: 340 10% 16%;
+    --muted-foreground: 28 12% 64%;
+
+    --accent: 38 46% 62%;
+    --accent-foreground: 28 45% 10%;
+
+    --destructive: 358 55% 58%;
+    --destructive-foreground: 30 30% 96%;
+
+    --border: 340 10% 20%;
+    --input: 340 10% 23%;
+    --ring: 343 40% 58%;
+
+    --sidebar: 162 30% 8%;
+    --sidebar-foreground: 42 30% 94%;
+    --sidebar-ring: 152 40% 55%;
+
+    --shadow-color: 0 0 0;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "ss01" on, "cv01" on;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: hsl(var(--primary) / 0.16);
+    color: hsl(var(--primary));
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+
+  /*
+   * The public site's serif wants a light weight and open tracking; a UI sans
+   * at the same size wants more weight and tighter tracking. The family swap
+   * itself already happened via `--font-display`; this is the matching metric
+   * correction so dashboard headings do not read as thin.
+   */
+  .console h1,
+  .console h2,
+  .console h3,
+  .console h4 {
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  /*
+   * Small-caps labels and body copy carry slightly different metrics in a
+   * grotesk than in the serif they were tuned against.
+   */
+  .console .eyebrow {
+    letter-spacing: 0.14em;
+  }
+
+  /* Numeric data stays aligned in tables and KPI blocks. */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" on;
+  }
+}
+
+@layer components {
+  /* A small-caps label used to open sections. */
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground;
+  }
+
+  .hairline {
+    background-image: linear-gradient(
+      to right,
+      transparent,
+      hsl(var(--border)),
+      transparent
+    );
+  }
+
+  /* Fine paper grain — keeps large ivory fields from feeling flat. */
+  .grain::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.5;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  }
+
+  .ring-focus {
+    @apply outline-none ring-offset-2 ring-offset-background focus-visible:ring-2 focus-visible:ring-ring;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .text-pretty {
+    text-wrap: pretty;
+  }
+
+  /* Slim, quiet scrollbars that suit the palette. */
+  .scroll-slim {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+  .scroll-slim::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .scroll-slim::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 999px;
+  }
+  .scroll-slim::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Print
+ *
+ * The one thing in this app anyone prints is an arrival pass. The public
+ * shell's navigation, the footer and every action button are noise on paper,
+ * and the card's shadow and tinted borders waste toner and read as mud.
+ *
+ * `[data-print="hide"]` is the explicit opt-out for elements that are not
+ * obviously chrome (the "your chair is reserved" banner, the button row).
+ * ------------------------------------------------------------------ */
+@media print {
+  @page {
+    margin: 14mm;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+  }
+
+  header,
+  footer,
+  nav,
+  button,
+  [data-print="hide"] {
+    display: none !important;
+  }
+
+  [data-print="pass"] {
+    border: 1px solid #d9d2c7 !important;
+    border-radius: 12px !important;
+    box-shadow: none !important;
+    /* Never split the pass across two sheets. */
+    break-inside: avoid;
+  }
+
+  /* A link's href after it is meaningless on a printed pass. */
+  a[href]::after {
+    content: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

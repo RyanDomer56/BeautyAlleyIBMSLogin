@@ -1,0 +1,26 @@
+# Keep the build context small, and keep secrets out of the image entirely.
+#
+# `.env*` is excluded on purpose: a copied .env.local would bake the service-role
+# key into a layer, where it survives even if a later layer deletes the file.
+
+**/node_modules
+**/dist
+**/*.tsbuildinfo
+
+.git
+.github
+.verify
+.workbuddy-ai
+
+backend/backups
+backend/bin
+**/*.log
+
+.env
+.env.*
+**/.env
+**/.env.*
+!**/.env.example
+
+pp.html
+**/*.md

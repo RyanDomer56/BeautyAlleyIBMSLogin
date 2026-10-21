@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TEXT PING PONG</title>
+<style>
+  :root {
+    --bg: #0b0f14;
+    --panel: #121921;
+    --panel-2: #1a2430;
+    --text: #e6edf3;
+    --dim: #6b7a8a;
+    --accent: #4fc0ff;
+    --accent-2: #ffb347;
+    --green: #69f0ae;
+    --red: #ff5252;
+    --border: #2a3644;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "SF Mono", "Fira Code", "Cascadia Code", "Consolas", Menlo, monospace;
+    overflow: hidden;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+  }
+  #app {
+    width: 100%;
+    max-width: 820px;
+    height: 92vh;
+    max-height: 760px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px 18px 18px;
+  }
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+  }
+  h1 {
+    font-size: 20px;
+    letter-spacing: 4px;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+  .controls-hint {
+    font-size: 12px;
+    color: var(--dim);
+  }
+  #score {
+    display: flex;
+    gap: 12px;
+    font-size: 26px;
+    font-weight: bold;
+    letter-spacing: 1px;
+  }
+  #score .p1 { color: var(--accent); }
+  #score .p2 { color: var(--accent-2); }
+  #score .zero { color: var(--dim); font-weight: normal; }
+  #grid-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    min-height: 0;
+  }
+  #grid {
+    font-size: 22px;
+    line-height: 1;
+    letter-spacing: 0;
+    white-space: pre;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #net {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 2px;
+    background: repeating-linear-gradient(0deg,
+        transparent,
+        transparent 6px,
+        var(--border) 6px,
+        var(--border) 8px);
+    pointer-events: none;
+    opacity: 0.5;
+  }
+  #status {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 13px;
+    color: var(--dim);
+  }
+  #status .msg { flex: 1; text-align: center; }
+  #status .msg.win { color: var(--green); font-weight: bold; }
+  #status .msg.gameover { color: var(--red); font-weight: bold; }
+  #buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  #buttons button {
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  #buttons button:hover { background: var(--border); border-color: #3a4a5f; }
+  #buttons button.active { border-color: var(--accent); color: var(--accent); }
+  #fps {
+    position: absolute;
+    bottom: 10px; right: 14px;
+    font-size: 11px;
+    color: var(--dim);
+  }
+  .fade-in { animation: fadeIn 0.25s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .announce {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0.8);
+    background: var(--panel);
+    padding: 14px 24px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    text-align: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s, transform 0.2s;
+  }
+  .announce.show { opacity: 1; transform: translate(-50%, -50%) scale(1); pointer-events: auto; }
+  .announce.win { border-color: var(--green); color: var(--green); }
+  .announce.gameover { border-color: var(--red); color: var(--red); }
+  .announce .big { font-size: 20px; font-weight: bold; margin-bottom: 4px; }
+  .announce .sub { font-size: 13px; color: var(--dim); }
+</style>
+</head>
+<body>
+  <div id="app">
+    <header>
+      <h1>⟐ TEXT PONG</h1>
+      <div class="controls-hint">1P: A/S &nbsp;·&nbsp; 2P: A/S + K/M (or ↑/↓) &nbsp;·&nbsp; M toggle mode &nbsp;·&nbsp; R restart</div>
+    </header>
+
+    <div id="score">
+      <span class="p1" id="score-p1">0</span>
+      <span class="zero" id="divider">:</span>
+      <span class="p2" id="score-p2">0</span>
+    </div>
+
+    <div id="grid-wrap">
+      <div id="grid"></div>
+      <div id="net"></div>
+    </div>
+
+    <div id="status">
+      <div class="msg" id="msg">⏳ Press SPACE or click to start</div>
+    </div>
+
+    <div id="buttons">
+      <button id="btn-1p" class="active">1 player (A/S)</button>
+      <button id="btn-2p">2 players (A/S + K/M)</button>
+      <button id="btn-restart">Restart</button>
+    </div>
+  </div>
+
+  <div class="announce" id="announce">
+    <div class="big" id="announce-title">Player 1 Wins!</div>
+    <div class="sub" id="announce-sub">Press SPACE to play again</div>
+  </div>
+
+  <div id="fps"></div>
+
+<script>
+"use strict";
+/* One-file text ping pong. No dependencies. */
+
+const W = 46;   // grid width (columns)
+const H = 20;   // grid height (rows)
+
+const $ = (id) => document.getElementById(id);
+const scoreP1 = $("score-p1");
+const scoreP2 = $("score-p2");
+const msg = $("msg");
+const gridEl = $("grid");
+const announce = $("announce");
+const announceTitle = $("announce-title");
+const announceSub = $("announce-sub");
+
+/* ---- State ---- */
+let mode = "1p"; // "1p" or "2p"
+let gameOver = false;
+let winningPlayer = -1;
+let status = "ready"; // ready | playing | point | win
+let score = [0, 0];
+let ball = { x: Math.floor(W / 2), y: Math.floor(H / 2), vx: 4, vy: 3 };
+let paddles = [
+  { x: 2, y: Math.floor(H / 2) - 3, w: 3, h: 7 }, // player (left)
+  { x: W - 3, y: Math.floor(H / 2) - 3, w: 3, h: 7 } // opponent
+];
+const KEY = {
+  playerUp: ["KeyA", "ArrowUp"],
+  playerDown: ["KeyS", "ArrowDown"],
+  oppUp: ["KeyK", "ArrowUp"],
+  oppDown: ["KeyM", "ArrowDown"]
+};
+let keys = {};
+let lastTime = 0;
+let frameCount = 0;
+const fpsDisplay = $("fps");
+const MAX_SPEED = 3;
+
+/* ---- Helpers ---- */
+function setGrid(ch) {
+  gridEl.textContent = ch;
+}
+
+/* ---- Rendering ---- */
+function drawTable() {
+  let rows = [];
+  for (let y = 0; y < H; y++) {
+    rows.push(Array(W).fill(" ").join(""));
+  }
+
+  // player paddle
+  const pl = paddles[0];
+  for (let i = 0; i < pl.w; i++) {
+    for (let j = 0; j < pl.h; j++) {
+      const yy = Math.floor(pl.y + j), xx = pl.x + i;
+      if (yy >= 0 && yy < H && xx >= 0 && xx < W) rows[yy] = rows[yy].slice(0, xx) + "▮" + rows[yy].slice(xx + 1);
+    }
+  }
+  // opponent paddle
+  const op = paddles[1];
+  for (let i = 0; i < op.w; i++) {
+    for (let j = 0; j < op.h; j++) {
+      const yy = Math.floor(op.y + j), xx = op.x + i;
+      if (yy >= 0 && yy < H && xx >= 0 && xx < W) rows[yy] = rows[yy].slice(0, xx) + "▮" + rows[yy].slice(xx + 1);
+    }
+  }
+
+  // center net (drawn first)
+  const netCol = Math.floor(W / 2);
+  for (let y = 0; y < H; y++) {
+    if (y % 4 === 1 || y % 4 === 2) {
+      rows[y] = rows[y].slice(0, netCol) + "█" + rows[y].slice(netCol + 1);
+    }
+  }
+
+  // ball (drawn last, on top of the net)
+  if (ball.x >= 0 && ball.x < W && ball.y >= 0 && ball.y < H) {
+    const yy = Math.floor(ball.y), xx = ball.x;
+    rows[yy] = rows[yy].slice(0, xx) + "◉" + rows[yy].slice(xx + 1);
+  }
+
+  setGrid(rows.join("\n"));
+}
+
+/* ---- Physics ---- */
+function resetBall() {
+  ball.x = Math.floor(W / 2);
+  ball.y = Math.floor(H / 2);
+  ball.vx = (Math.random() > 0.5 ? 1 : -1) * (1 + Math.floor(Math.random() * 2));
+  ball.vy = (Math.random() > 0.5 ? 1 : -1) * (1 + Math.floor(Math.random() * 2));
+  keepSpeed();
+}
+
+function keepSpeed() {
+  const m = Math.sqrt(ball.vx * ball.vx + ball.vy * ball.vy);
+  if (m > MAX_SPEED) {
+    ball.vx = (ball.vx / m) * MAX_SPEED;
+    ball.vy = (ball.vy / m) * MAX_SPEED;
+  }
+  if (ball.vx === 0) ball.vx = 1;
+  if (ball.vy === 0) ball.vy = 1;
+}
+
+function update(passedTime) {
+  if (gameOver) return;
+  const dt = Math.min(passedTime, 50) / 16.67;
+  const steps = 4;
+
+  // ---- player paddle (left) ----
+  const pl = paddles[0];
+  let dy = 0;
+  if (keys[KEY.playerUp]) dy -= 1;
+  if (keys[KEY.playerDown]) dy += 1;
+  if (dy !== 0) {
+    pl.y += dy * (6 * dt);
+    pl.y = Math.round(Math.max(0, Math.min(H - pl.h, pl.y)));
+  }
+
+  // ---- opponent paddle (right) ----
+  const op = paddles[1];
+  if (mode === "2p" && (keys[KEY.oppUp] || keys[KEY.oppDown])) {
+    dy = 0;
+    if (keys[KEY.oppUp]) dy -= 1;
+    if (keys[KEY.oppDown]) dy += 1;
+    if (dy !== 0) {
+      op.y += dy * (6 * dt);
+      op.y = Math.round(Math.max(0, Math.min(H - op.h, op.y)));
+    }
+  } else {
+    const targetY = ball.y - Math.floor(op.h / 2);
+    const oSpeed = 4.5 * dt;
+    if (targetY < op.y) op.y -= oSpeed;
+    if (targetY > op.y) op.y += oSpeed;
+    op.y = Math.max(0, Math.min(H - op.h, op.y));
+  }
+
+  // ---- ball movement (sub-stepped, frame-rate independent) ----
+  const stepX = ball.vx * dt / steps;
+  const stepY = ball.vy * dt / steps;
+  for (let s = 0; s < steps; s++) {
+    ball.x += stepX;
+    ball.y += stepY;
+
+    // top/bottom walls
+    if (ball.y <= 0) { ball.y = 0; ball.vy = -ball.vy; }
+    if (ball.y >= H - 1) { ball.y = H - 1; ball.vy = -ball.vy; }
+
+    // left paddle
+    if (ball.x + 0.5 >= pl.x && ball.x - 0.5 <= pl.x + pl.w &&
+        ball.y + 0.5 >= pl.y && ball.y - 0.5 <= pl.y + pl.h) {
+      ball.x = pl.x + pl.w + 0.5;
+      ball.vx = Math.abs(ball.vx);
+      const hit = ball.y - (pl.y + pl.h / 2);
+      ball.vy = (hit / (pl.h / 2)) * 0.8;
+      keepSpeed();
+    }
+    // right paddle
+    else if (ball.x - 0.5 <= op.x + op.w && ball.x + 0.5 >= op.x &&
+             ball.y + 0.5 >= op.y && ball.y - 0.5 <= op.y + op.h) {
+      ball.x = op.x - 0.5;
+      ball.vx = -Math.abs(ball.vx);
+      const hit = ball.y - (op.y + op.h / 2);
+      ball.vy = (hit / (op.h / 2)) * 0.8;
+      ball.vy = -ball.vy;
+      keepSpeed();
+    }
+  }
+
+  // ---- out of bounds ----
+  if (ball.x <= 0) {
+    point(1);
+  } else if (ball.x >= W - 1) {
+    point(0);
+  }
+}
+
+/* ---- Scoring ---- */
+function point(winner) {
+  status = "point";
+  score[winner]++;
+  if (score[winner] >= 11 && score[winner] - score[1 - winner] >= 2) {
+    gameOver = true;
+    winningPlayer = winner;
+    status = "win";
+    showAnnounce(winner);
+  } else {
+    setTimeout(() => {
+      if (!gameOver) { resetBall(); status = "playing"; }
+    }, 900);
+  }
+}
+
+function updateScore() {
+  scoreP1.textContent = score[0];
+  scoreP2.textContent = score[1];
+}
+
+/* ---- UI ---- */
+function showAnnounce(winner) {
+  const names = ["Player 1", "Player 2"];
+  announceTitle.textContent = names[winner] + " Wins!";
+  announceSub.textContent = "Press SPACE to play again";
+  announce.classList.add("show");
+  announce.classList.add(winner === 0 ? "win" : "gameover");
+}
+
+function hideAnnounce() {
+  announce.classList.remove("show");
+  announce.classList.remove("win", "gameover");
+}
+
+function startGame() {
+  score = [0, 0];
+  gameOver = false;
+  status = "playing";
+  const center = Math.floor(H / 2) - Math.floor(paddles[0].h / 2);
+  paddles[0].y = center;
+  paddles[1].y = center;
+  resetBall();
+  updateScore();
+  hideAnnounce();
+  drawTable();
+}
+
+/* ---- Game loop ---- */
+function tick(timestamp) {
+  if (lastTime === 0) lastTime = timestamp;
+  const passed = timestamp - lastTime;
+  lastTime = timestamp;
+
+  frameCount++;
+  if (timestamp - (window.__fpsTime || 0) >= 1000) {
+    fpsDisplay.textContent = "FPS: " + frameCount;
+    frameCount = 0;
+    window.__fpsTime = timestamp;
+  }
+
+  update(passed);
+  drawTable();
+
+  if (status === "ready") {
+    msg.textContent = "⏳ Press SPACE or click to start";
+  } else if (status === "point") {
+    msg.textContent = "…";
+  } else if (status === "win") {
+    msg.textContent = "";
+  } else {
+    msg.textContent = "";
+  }
+
+  requestAnimationFrame(tick);
+}
+
+/* ---- Input ---- */
+function bindKeys() {
+  window.addEventListener("keydown", (e) => {
+    keys[e.code] = true;
+    if (e.code === "Space" || e.code === "Enter") {
+      e.preventDefault();
+      if (status === "ready" || status === "point" || gameOver) {
+        startGame();
+      }
+    } else if (e.code === "KeyM") {
+      toggleMode();
+    } else if (e.code === "KeyR") {
+      startGame();
+    }
+  });
+  window.addEventListener("keyup", (e) => { keys[e.code] = false; });
+}
+
+function toggleMode(target) {
+  if (target !== undefined) {
+    mode = target;
+  } else {
+    mode = (mode === "1p") ? "2p" : "1p";
+  }
+  document.querySelectorAll("#buttons button").forEach((b) => {
+    b.classList.toggle("active", b.id === "btn-" + mode);
+  });
+  msg.textContent = mode === "1p" ? "1 player mode (A/S)" : "2 player mode (A/S + K/M)";
+}
+
+/* ---- Init ---- */
+function init() {
+  bindKeys();
+  drawTable();
+  updateScore();
+  msg.textContent = "⏳ Press SPACE or click to start";
+
+  document.querySelectorAll("#app").forEach((el) => {
+    el.addEventListener("click", () => {
+      if (status === "ready" || status === "point" || gameOver) startGame();
+    });
+  });
+
+  $("btn-1p").addEventListener("click", () => { toggleMode("1p"); startGame(); });
+  $("btn-2p").addEventListener("click", () => { toggleMode("2p"); startGame(); });
+  $("btn-restart").addEventListener("click", startGame);
+
+  requestAnimationFrame(tick);
+}
+
+document.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>

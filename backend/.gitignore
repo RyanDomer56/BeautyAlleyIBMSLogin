@@ -1,0 +1,20 @@
+node_modules/
+dist/
+coverage/
+
+# Local JSON backups written by scripts/reset-demo-data.js before it deletes.
+# Real data, but not source — and not something to push.
+backups/
+
+# Environment files. Real credentials are NEVER committed.
+#   .env            local override file (ignored)
+#   .env.local      the real credentials, loaded first - kept local only
+#   .env.example    the template - deliberately re-included so it stays tracked
+.env
+.env.*
+!.env.example
+
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db

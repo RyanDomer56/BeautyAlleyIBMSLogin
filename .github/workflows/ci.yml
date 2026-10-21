@@ -1,0 +1,133 @@
+name: CI
+
+# Three things this is for, in order of value:
+#   1. Catch a committed secret before it is merged (gitleaks).
+#   2. Prove both apps still typecheck and build.
+#   3. Prove the production bundle contains no credential.
+#
+# The integration suite is opt-in (see the `integration` job). It needs a real
+# Supabase project, and pointing CI at the wrong one would truncate real data -
+# which is exactly the failure `scripts/seed.js` now refuses to allow.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  secrets:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history: a secret deleted in a later commit is still a leak,
+          # and a shallow clone cannot see it.
+          fetch-depth: 0
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  frontend:
+    name: Frontend (typecheck, build, bundle audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      # `build` runs `tsc -b && vite build`, so this is typecheck and build in
+      # one. A separate `tsc --noEmit` would add a minute and prove nothing new.
+      - run: npm run build
+
+      - name: No credential in the production bundle
+        run: |
+          set -e
+          if grep -rq "AlleyDemo2026" dist/; then
+            echo "::error::The demo password is present in dist/. src/auth/demo.ts must gate it behind import.meta.env.DEV."
+            exit 1
+          fi
+          echo "No demo credential in the bundle."
+
+  backend:
+    name: Backend (typecheck, build, unit tests)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      # Placeholders, not secrets. The unit suite never opens a connection -
+      # these exist because src/config/env.ts validates its configuration at
+      # import time, and a missing key would fail for the wrong reason.
+      SUPABASE_URL: https://ci-placeholder.supabase.co
+      SUPABASE_ANON_KEY: ci-placeholder-anon-key-000000000000
+      QR_SIGNING_SECRET: ci-placeholder-qr-signing-secret-0000000000
+      NODE_ENV: test
+      LOG_LEVEL: error
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+
+      # `test:unit` deliberately excludes tests/integration. Those need a live
+      # database and are run by the `integration` job below.
+      - run: npm run test:unit
+
+  integration:
+    name: Integration (real database)
+    runs-on: ubuntu-latest
+    # Opt in per repository: Settings -> Variables -> RUN_INTEGRATION = true.
+    # Kept off by default so a fork cannot point the suite at anything.
+    if: ${{ vars.RUN_INTEGRATION == 'true' }}
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      SUPABASE_URL: ${{ secrets.TEST_SUPABASE_URL }}
+      SUPABASE_ANON_KEY: ${{ secrets.TEST_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.TEST_SUPABASE_SERVICE_ROLE_KEY }}
+      DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
+      QR_SIGNING_SECRET: ${{ secrets.TEST_QR_SIGNING_SECRET }}
+      NODE_ENV: test
+      LOG_LEVEL: error
+      # The seed truncates. This is the explicit "this database is disposable"
+      # statement that scripts/seed.js requires.
+      ALLOW_DESTRUCTIVE_SEED: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - run: npm ci
+      - run: npm test
+
+  container:
+    name: Container image builds
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: docker build
+        run: docker build -t beauty-alley:ci .
